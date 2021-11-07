@@ -1,4 +1,4 @@
-module logger
+module github.com/gateway-fm/logger
 
 go 1.16
 
