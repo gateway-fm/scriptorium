@@ -1,9 +1,8 @@
 package logger
 
-
 import (
 	"context"
-	"ohdearcodingisfun/helper"
+	"github.com/gateway-fm/logger/helper"
 	"sync"
 
 	"go.uber.org/zap"
