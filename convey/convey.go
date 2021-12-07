@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gateway-fm/logger/logger"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type IConvey interface {
@@ -31,6 +32,12 @@ func (c *Convey) InitLogger() error {
 	}
 	switch env {
 	case logger.Local:
+		cfg := zap.NewDevelopmentConfig()
+		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		cfg.EncoderConfig.TimeKey = ""
+		cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+		cfg.Level.SetLevel(zapcore.ErrorLevel)
+		logger.Log().Logger, _ = cfg.Build()
 		c.logger.Logger, _ = zap.NewDevelopment()
 	case logger.Production, logger.Development:
 		c.logger.Logger, _ = zap.NewProduction()
