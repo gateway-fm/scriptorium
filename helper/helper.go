@@ -15,13 +15,17 @@ const ContextKeyRequestID ContextKey = "requestID"
 
 const RequestIDPrefix string = "reqid://"
 
-// SetRequestID will attach a brand new request ID to a http request
-func SetRequestID(ctx context.Context) context.Context {
+// SetRandomRequestID will attach a brand new request ID to a http request
+func SetRandomRequestID(ctx context.Context) context.Context {
 	reqID, err := uuid.NewV4()
 	if err != nil {
 		return ctx
 	}
 	return context.WithValue(ctx, ContextKeyRequestID, RequestIDPrefix+reqID.String())
+}
+
+func SetRequestID(ctx context.Context, requestID string) context.Context {
+	return context.WithValue(ctx, ContextKeyRequestID, requestID)
 }
 
 // GetRequestID will get reqID from a http request and return it as a string
@@ -52,4 +56,23 @@ func GetDVFAuthToken(ctx context.Context) string {
 		return token
 	}
 	return ""
+}
+
+type DebugKey string
+
+// Debug is the DebugKey for debug mode
+const Debug DebugKey = "debug"
+
+// SetDebug will set debug mode to a http request
+func SetDebug(ctx context.Context, debug bool) context.Context {
+	return context.WithValue(ctx, Debug, debug)
+}
+
+// GetDebug will get debug mode from a http request and return it
+func GetDebug(ctx context.Context) bool {
+	debug := ctx.Value(Debug)
+	if ret, ok := debug.(bool); ok {
+		return ret
+	}
+	return false
 }
