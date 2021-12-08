@@ -24,7 +24,16 @@ func (s AppEnv) String() string {
 	return Envs[s]
 }
 
-func EnvFromStr(s string) (AppEnv, error) {
+func EnvFromStr(s string) (AppEnv) {
+	for i, r := range Envs {
+		if strings.ToLower(s) == r {
+			return AppEnv(i)
+		}
+	}
+	return Production
+}
+
+func EnvFromStrE(s string) (AppEnv, error) {
 	for i, r := range Envs {
 		if strings.ToLower(s) == r {
 			return AppEnv(i), nil
