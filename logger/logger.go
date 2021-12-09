@@ -2,8 +2,6 @@ package logger
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"sync"
 
 	"go.uber.org/zap"
@@ -25,7 +23,6 @@ var (
 // SetLoggerMode set Logger level from given string
 func SetLoggerMode(envStr string) {
 	appEnv = EnvFromStr(envStr)
-	fmt.Println(appEnv)
 }
 
 //Log is invoking Zap Logger function
@@ -42,21 +39,14 @@ func LogWithContext(ctx context.Context) *zap.Logger {
 
 // initLogger initialise Logger instance only once
 func initLogger() {
-	cfg := zap.NewDevelopmentConfig()
 	once.Do(func() {
 		switch appEnv {
 		case Local:
-			core := zapcore.NewCore(
-				zapcore.NewConsoleEncoder(cfg.EncoderConfig),
-				os.Stdout,
-				zap.LevelEnablerFunc(func(level zapcore.Level) bool {
-					return level == zapcore.ErrorLevel
-				}),
-			)
+			cfg := zap.NewDevelopmentConfig()
 			cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 			cfg.EncoderConfig.TimeKey = ""
 			cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-			log := zap.New(core)
+			log, _ := cfg.Build()
 			instance = &Zaplog{log}
 		default:
 			log, _ := zap.NewProduction()
