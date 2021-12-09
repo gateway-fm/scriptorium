@@ -39,13 +39,13 @@ func LogWithContext(ctx context.Context) *zap.Logger {
 
 // initLogger initialise Logger instance only once
 func initLogger() {
+	cfg := zap.NewDevelopmentConfig()
+	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	cfg.EncoderConfig.TimeKey = ""
+	cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 	once.Do(func() {
 		switch appEnv {
 		case Local:
-			cfg := zap.NewDevelopmentConfig()
-			cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-			cfg.EncoderConfig.TimeKey = ""
-			cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 			log, _ := cfg.Build()
 			instance = &Zaplog{log}
 		default:
