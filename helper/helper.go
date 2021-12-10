@@ -44,20 +44,6 @@ func GetContextWithTimeout(ctx context.Context, timeout time.Duration) (context.
 	return ctx, cancel
 }
 
-// DVFAuthentication is used for context.Context value.
-type DVFAuthentication string
-
-// DvfAuthToken is the DVFAuthentication indicates
-const DvfAuthToken DVFAuthentication = "dvfAuthToken"
-
-func GetDVFAuthToken(ctx context.Context) string {
-	dvfAuthToken := ctx.Value(DvfAuthToken)
-	if token, ok := dvfAuthToken.(string); ok {
-		return token
-	}
-	return ""
-}
-
 type DebugKey string
 
 // Debug is the DebugKey for debug mode
