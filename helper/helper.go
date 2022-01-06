@@ -12,6 +12,7 @@ type ContextKey string
 
 // ContextKeyRequestID is the ContextKey for RequestID
 const ContextKeyRequestID ContextKey = "requestID"
+const PublicKey ContextKey = "userPublicKey"
 
 const RequestIDPrefix string = "reqid://"
 
@@ -26,6 +27,19 @@ func SetRandomRequestID(ctx context.Context) context.Context {
 
 func SetRequestID(ctx context.Context, requestID string) context.Context {
 	return context.WithValue(ctx, ContextKeyRequestID, requestID)
+}
+
+//func GetPublicKeyFromScriptorium(method func() []byte) []byte{
+//	return method()
+//}
+
+// GetPublicKey
+func GetPublicKey(ctx context.Context) string {
+	publicKey := ctx.Value(PublicKey)
+	if ret, ok := publicKey.(string); ok {
+		return ret
+	}
+	return ""
 }
 
 // GetRequestID will get reqID from a http request and return it as a string

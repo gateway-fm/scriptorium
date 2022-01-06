@@ -34,7 +34,15 @@ func Log() *Zaplog {
 //LogWithContext is invoking Zap Logger function with context
 func LogWithContext(ctx context.Context) *zap.Logger {
 	initLogger()
-	return instance.With(zap.String(string(helper.ContextKeyRequestID), helper.GetRequestID(ctx)))
+	standardLog := instance.With(zap.String(string(helper.ContextKeyRequestID), helper.GetRequestID(ctx)))
+	ultralog := instance.With(
+		zap.String(string(helper.ContextKeyRequestID), helper.GetRequestID(ctx)),
+		zap.String(string(helper.PublicKey), helper.GetPublicKey(ctx)),
+	)
+	if helper.GetPublicKey(ctx) != "" {
+		return ultralog
+	}
+	return standardLog
 }
 
 // initLogger initialise Logger instance only once
