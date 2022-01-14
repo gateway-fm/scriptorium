@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -12,6 +13,7 @@ type ContextKey string
 
 // ContextKeyRequestID is the ContextKey for RequestID
 const ContextKeyRequestID ContextKey = "requestID"
+const ResponseCode ContextKey = "responseCode"
 const PublicKey ContextKey = "userPublicKey"
 
 const RequestIDPrefix string = "reqid://"
@@ -29,11 +31,20 @@ func SetRequestID(ctx context.Context, requestID string) context.Context {
 	return context.WithValue(ctx, ContextKeyRequestID, requestID)
 }
 
-//func GetPublicKeyFromScriptorium(method func() []byte) []byte{
-//	return method()
-//}
+// SetResponseCode sets http response status code on the context
+func SetResponseCode(ctx context.Context, code int) context.Context {
+	return context.WithValue(ctx, ResponseCode, code)
+}
 
-// GetPublicKey
+// GetResponseCode returns http response status code from the context
+func GetResponseCode(ctx context.Context) (int, error) {
+	if v, ok := ctx.Value(ResponseCode).(int); ok {
+		return v, nil
+	}
+	return 0, fmt.Errorf("response code not found")
+}
+
+// GetPublicKey returns public key from the context
 func GetPublicKey(ctx context.Context) string {
 	publicKey := ctx.Value(PublicKey)
 	if ret, ok := publicKey.(string); ok {
