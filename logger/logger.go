@@ -12,6 +12,7 @@ import (
 
 type Zaplog struct {
 	*zap.Logger
+	*redactor
 }
 
 var (
@@ -19,6 +20,25 @@ var (
 	once     sync.Once
 	appEnv   AppEnv
 )
+
+// initLogger initialise Logger instance only once
+func initLogger() {
+	once.Do(func() {
+		r := NewRedactor()
+		switch appEnv {
+		case Local:
+			cfg := zap.NewDevelopmentConfig()
+			cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+			cfg.EncoderConfig.TimeKey = ""
+			cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+			log, _ := cfg.Build()
+			instance = &Zaplog{log, r}
+		default:
+			log, _ := zap.NewProduction()
+			instance = &Zaplog{log, r}
+		}
+	})
+}
 
 // SetLoggerMode set Logger level from given string
 func SetLoggerMode(envStr string) {
@@ -32,7 +52,7 @@ func Log() *Zaplog {
 }
 
 //LogWithContext is invoking Zap Logger function with context
-func LogWithContext(ctx context.Context) *zap.Logger {
+func LogWithContext(ctx context.Context) *Zaplog {
 	initLogger()
 
 	publicKey := helper.GetPublicKey(ctx)
@@ -46,20 +66,36 @@ func LogWithContext(ctx context.Context) *zap.Logger {
 	)
 }
 
-// initLogger initialise Logger instance only once
-func initLogger() {
-	once.Do(func() {
-		switch appEnv {
-		case Local:
-			cfg := zap.NewDevelopmentConfig()
-			cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-			cfg.EncoderConfig.TimeKey = ""
-			cfg.EncoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-			log, _ := cfg.Build()
-			instance = &Zaplog{log}
-		default:
-			log, _ := zap.NewProduction()
-			instance = &Zaplog{log}
-		}
-	})
+func (z *Zaplog) With(fields ...zapcore.Field) *Zaplog {
+	return &Zaplog{z.Logger.With(fields...), z.redactor}
+}
+
+func (z *Zaplog) InfoRedact(s string) *Zaplog {
+	z.Info(z.Redact(s))
+	return z
+}
+
+func (z *Zaplog) DebugRedact(s string) *Zaplog {
+	z.Debug(z.Redact(s))
+	return z
+}
+
+func (z *Zaplog) WarnRedact(s string) *Zaplog {
+	z.Warn(z.Redact(s))
+	return z
+}
+
+func (z *Zaplog) ErrorRedact(s string) *Zaplog {
+	z.Error(z.Redact(s))
+	return z
+}
+
+func (z *Zaplog) PanicRedact(s string) *Zaplog {
+	z.Panic(z.Redact(s))
+	return z
+}
+
+func (z *Zaplog) FatalRedact(s string) *Zaplog {
+	z.Fatal(z.Redact(s))
+	return z
 }
