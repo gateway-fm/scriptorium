@@ -99,3 +99,28 @@ func (z *Zaplog) FatalRedact(s string) *Zaplog {
 	z.Fatal(z.Redact(s))
 	return z
 }
+
+func (z *Zaplog) InfoErr(e error) *Zaplog {
+	z.Logger.Info(e.Error())
+	return z
+}
+
+func (z *Zaplog) DebugErr(e error) *Zaplog {
+	z.Logger.Debug(e.Error())
+	return z
+}
+
+func (z *Zaplog) WarnErr(e error) *Zaplog {
+	z.Logger.Warn(e.Error())
+	return z
+}
+
+func (z *Zaplog) ErrorErr(e error) *Zaplog {
+	z.Logger.Error(e.Error())
+	return z
+}
+
+func (z *Zaplog) PanicErr(e error) *Zaplog {
+	z.Logger.Panic(e.Error())
+	return z
+}
