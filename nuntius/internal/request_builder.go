@@ -44,7 +44,7 @@ func TempRequest() error {
 		return fmt.Errorf("%w", err)
 
 	}
-	req.Header.Add("Authorization", "Bearer c8_oaXv7CUybRGueZPs1HegXIrNJIMUT.FDm9FQgWvn5K6CLv")
+	req.Header.Add("Authorization", "Bearer "+payload.BearerKey)
 	req.Header.Add("Content-Type", "application/json")
 
 	res, err := client.Do(req)

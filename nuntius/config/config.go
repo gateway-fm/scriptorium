@@ -6,11 +6,12 @@ import (
 )
 
 type Payload struct {
-	Jsonrpc string
-	Id      interface{}
-	Method  string
-	Params  interface{}
-	Url     string
+	Jsonrpc   string
+	Id        interface{}
+	Method    string
+	Params    interface{}
+	Url       string
+	BearerKey string
 }
 type Config struct {
 	cfg *Payload
