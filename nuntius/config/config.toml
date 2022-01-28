@@ -1,0 +1,6 @@
+Jsonrpc = "2.0"
+Method = "eth_blockNumber"
+Params = ""
+Id = "1"
+Url = "http://127.0.0.1:8080/v1/ethereum/mainnet"
+
