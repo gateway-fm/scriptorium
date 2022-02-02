@@ -128,14 +128,12 @@ func (z *Zaplog) PanicErr(e error) *Zaplog {
 	return z
 }
 
-func (z *Zaplog) WithCropIfNeeded(key string, value interface{}) *Zaplog {
+// AnyCropped takes a key and an arbitrary value and chooses the best way to represent them as a field.
+// It crops the content if it is larger than 200 characters.
+func AnyCropped(key string, value interface{}) zap.Field {
 	valueJson, err := json.Marshal(value)
-	if err != nil {
-		return z
+	if err != nil || len(valueJson) <= MaxAttributeChars {
+		return zap.Any(key, value)
 	}
-
-	if len(valueJson) <= MaxAttributeChars {
-		return z.With(zap.Any(key, value))
-	}
-	return z.With(zap.ByteString(key, valueJson[0:MaxAttributeChars]))
+	return zap.ByteString(key, valueJson[0:MaxAttributeChars])
 }
