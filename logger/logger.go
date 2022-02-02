@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 
 	"go.uber.org/zap"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/gateway-fm/scriptorium/helper"
 )
+
+const MaxAttributeChars = 200
 
 type Zaplog struct {
 	*zap.Logger
@@ -123,4 +126,16 @@ func (z *Zaplog) ErrorErr(e error) *Zaplog {
 func (z *Zaplog) PanicErr(e error) *Zaplog {
 	z.Logger.Panic(e.Error())
 	return z
+}
+
+func (z *Zaplog) WithCropIfNeeded(key string, value interface{}) *Zaplog {
+	valueJson, err := json.Marshal(value)
+	if err != nil {
+		return z
+	}
+
+	if len(valueJson) <= MaxAttributeChars {
+		return z.With(zap.Any(key, value))
+	}
+	return z.With(zap.ByteString(key, valueJson[0:MaxAttributeChars]))
 }
