@@ -10,14 +10,12 @@ type INodePing interface {
 	LogNodeRequestHandled(ctx context.Context, isHealthCheck bool)
 }
 
-type NodePing struct {
-	ID, Address, Blockchain string
-}
+type NodePing struct{}
 
 // LogNodeRequestSend logs a message about sending the request to a node
 // it marks the log entry as a healthcheck if isHealthCheck is true
-func (n *NodePing) LogNodeRequestSend(ctx context.Context, isHealthCheck bool) {
-	logMessage := fmt.Sprintf("request send to %s-node %s on %s", n.Blockchain, n.ID, n.Address)
+func (n *NodePing) LogNodeRequestSend(ctx context.Context, isHealthCheck bool, bc, id, addr string) {
+	logMessage := fmt.Sprintf("request send to %s-node %s on %s", bc, id, addr)
 	if isHealthCheck {
 		Log().Info("healthcheck: " + logMessage)
 		return
@@ -27,8 +25,8 @@ func (n *NodePing) LogNodeRequestSend(ctx context.Context, isHealthCheck bool) {
 
 // LogNodeRequestHandled logs a message about finishing handling the request to a node
 // it marks the log entry as a healthcheck if isHealthCheck is true
-func (n *NodePing) LogNodeRequestHandled(ctx context.Context, isHealthCheck bool) {
-	logMessage := fmt.Sprintf("request handled by  %s-node %s on %s", n.Blockchain, n.ID, n.Address)
+func (n *NodePing) LogNodeRequestHandled(ctx context.Context, isHealthCheck bool, bc, id, addr string) {
+	logMessage := fmt.Sprintf("request handled by  %s-node %s on %s", bc, id, addr)
 	if isHealthCheck {
 		Log().Info("healthcheck: " + logMessage)
 		return
