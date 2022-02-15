@@ -6,8 +6,8 @@ import (
 )
 
 type INodePing interface {
-	LogNodeRequestSend(ctx context.Context, isHealthCheck bool)
-	LogNodeRequestHandled(ctx context.Context, isHealthCheck bool)
+	LogNodeRequestSend(ctx context.Context, isHealthCheck bool, bc, id, addr string)
+	LogNodeRequestHandled(ctx context.Context, isHealthCheck bool, bc, id, addr string)
 }
 
 type NodePing struct{}
