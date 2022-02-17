@@ -17,7 +17,7 @@ type NodePing struct{}
 func (n *NodePing) LogNodeRequestSend(ctx context.Context, isHealthCheck bool, bc, id, addr string) {
 	logMessage := fmt.Sprintf("request send to %s-node %s on %s", bc, id, addr)
 	if isHealthCheck {
-		Log().Info("I'm alive!")
+		Log().Info("I'm alive")
 		return
 	}
 	LogWithContext(ctx).Info(logMessage)
@@ -28,7 +28,7 @@ func (n *NodePing) LogNodeRequestSend(ctx context.Context, isHealthCheck bool, b
 func (n *NodePing) LogNodeRequestHandled(ctx context.Context, isHealthCheck bool, bc, id, addr string) {
 	logMessage := fmt.Sprintf("request handled by  %s-node %s on %s", bc, id, addr)
 	if isHealthCheck {
-		Log().Info("I'm alive!")
+		Log().Info("I'm alive")
 		return
 	}
 	LogWithContext(ctx).Info(logMessage)
