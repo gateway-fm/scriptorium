@@ -73,58 +73,58 @@ func (z *Zaplog) With(fields ...zapcore.Field) *Zaplog {
 	return &Zaplog{z.Logger.With(fields...), z.redactor}
 }
 
-func (z *Zaplog) InfoRedact(s string) *Zaplog {
-	z.Info(z.Redact(s))
+func (z *Zaplog) InfoRedact(s string, fields ...zapcore.Field) *Zaplog {
+	z.Info(z.Redact(s), fields...)
 	return z
 }
 
-func (z *Zaplog) DebugRedact(s string) *Zaplog {
-	z.Debug(z.Redact(s))
+func (z *Zaplog) DebugRedact(s string, fields ...zapcore.Field) *Zaplog {
+	z.Debug(z.Redact(s), fields...)
 	return z
 }
 
-func (z *Zaplog) WarnRedact(s string) *Zaplog {
-	z.Warn(z.Redact(s))
+func (z *Zaplog) WarnRedact(s string, fields ...zapcore.Field) *Zaplog {
+	z.Warn(z.Redact(s), fields...)
 	return z
 }
 
-func (z *Zaplog) ErrorRedact(s string) *Zaplog {
-	z.Error(z.Redact(s))
+func (z *Zaplog) ErrorRedact(s string, fields ...zapcore.Field) *Zaplog {
+	z.Error(z.Redact(s), fields...)
 	return z
 }
 
-func (z *Zaplog) PanicRedact(s string) *Zaplog {
-	z.Panic(z.Redact(s))
+func (z *Zaplog) PanicRedact(s string, fields ...zapcore.Field) *Zaplog {
+	z.Panic(z.Redact(s), fields...)
 	return z
 }
 
-func (z *Zaplog) FatalRedact(s string) *Zaplog {
-	z.Fatal(z.Redact(s))
+func (z *Zaplog) FatalRedact(s string, fields ...zapcore.Field) *Zaplog {
+	z.Fatal(z.Redact(s), fields...)
 	return z
 }
 
-func (z *Zaplog) InfoErr(e error) *Zaplog {
-	z.Logger.Info(e.Error())
+func (z *Zaplog) InfoErr(e error, fields ...zapcore.Field) *Zaplog {
+	z.Logger.Info(e.Error(), fields...)
 	return z
 }
 
-func (z *Zaplog) DebugErr(e error) *Zaplog {
-	z.Logger.Debug(e.Error())
+func (z *Zaplog) DebugErr(e error, fields ...zapcore.Field) *Zaplog {
+	z.Logger.Debug(e.Error(), fields...)
 	return z
 }
 
-func (z *Zaplog) WarnErr(e error) *Zaplog {
-	z.Logger.Warn(e.Error())
+func (z *Zaplog) WarnErr(e error, fields ...zapcore.Field) *Zaplog {
+	z.Logger.Warn(e.Error(), fields...)
 	return z
 }
 
-func (z *Zaplog) ErrorErr(e error) *Zaplog {
-	z.Logger.Error(e.Error())
+func (z *Zaplog) ErrorErr(e error, fields ...zapcore.Field) *Zaplog {
+	z.Logger.Error(e.Error(), fields...)
 	return z
 }
 
-func (z *Zaplog) PanicErr(e error) *Zaplog {
-	z.Logger.Panic(e.Error())
+func (z *Zaplog) PanicErr(e error, fields ...zapcore.Field) *Zaplog {
+	z.Logger.Panic(e.Error(), fields...)
 	return z
 }
 
