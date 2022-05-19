@@ -3,6 +3,8 @@ package version
 import (
 	"bytes"
 	"fmt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"strings"
 	"text/template"
 	"time"
@@ -100,5 +102,5 @@ func (v Version) String() string {
 
 // GetName return service name
 func (v Version) GetName() string {
-	return strings.Title(v.Service)
+	return cases.Title(language.English).String(v.Service)
 }
