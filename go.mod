@@ -6,6 +6,7 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
+	golang.org/x/text v0.3.6
 )
 
 require (
