@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/spf13/viper"
 )
 
 // ContextKey is used for context.Context value. The value requires a key that is not primitive type.
@@ -87,4 +88,15 @@ func GetDebug(ctx context.Context) bool {
 		return ret
 	}
 	return false
+}
+
+func GetFeatTag() bool {
+	switch viper.GetString("ENV") {
+	case "dev":
+		return true
+	case "local":
+		return true
+	default:
+		return false
+	}
 }
