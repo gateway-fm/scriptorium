@@ -14,6 +14,7 @@ const ContextKeyRequestID ContextKey = "requestID"
 const PublicKey ContextKey = "userPublicKey"
 
 const RequestIDPrefix string = "reqid://"
+const PublicKeyNotSet = "not set"
 
 // SetRandomRequestID will attach a brand new request ID to a http request
 func SetRandomRequestID(ctx *fasthttp.RequestCtx) {
