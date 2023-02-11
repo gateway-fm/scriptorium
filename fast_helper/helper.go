@@ -1,20 +1,11 @@
 package fast_helper
 
 import (
+	"github.com/gateway-fm/scriptorium/helper"
 	"github.com/gofrs/uuid"
 	"github.com/spf13/viper"
 	"github.com/valyala/fasthttp"
 )
-
-// ContextKey is used for context.Context value. The value requires a key that is not primitive type.
-type ContextKey string
-
-// ContextKeyRequestID is the ContextKey for RequestID
-const ContextKeyRequestID ContextKey = "requestID"
-const PublicKey ContextKey = "userPublicKey"
-
-const RequestIDPrefix string = "reqid://"
-const PublicKeyNotSet = "not set"
 
 // SetRandomRequestID will attach a brand new request ID to a http request
 func SetRandomRequestID(ctx *fasthttp.RequestCtx) {
@@ -22,11 +13,11 @@ func SetRandomRequestID(ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		ctx.Logger().Printf("couldn't create randomly generated UUID ")
 	}
-	ctx.SetUserValue(ContextKeyRequestID, RequestIDPrefix+reqID.String())
+	ctx.SetUserValue(helper.ContextKeyRequestID, helper.RequestIDPrefix+reqID.String())
 }
 
 func SetRequestID(ctx *fasthttp.RequestCtx, requestID string) {
-	ctx.SetUserValue(ContextKeyRequestID, requestID)
+	ctx.SetUserValue(helper.ContextKeyRequestID, requestID)
 }
 
 // SetResponseCode sets http response status code on the context
@@ -41,7 +32,7 @@ func GetResponseCode(ctx *fasthttp.RequestCtx) int {
 
 // GetPublicKey returns public key from the context
 func GetPublicKey(ctx *fasthttp.RequestCtx) string {
-	publicKey := ctx.Value(PublicKey)
+	publicKey := ctx.Value(helper.PublicKey)
 	if ret, ok := publicKey.(string); ok {
 		return ret
 	}
@@ -50,7 +41,7 @@ func GetPublicKey(ctx *fasthttp.RequestCtx) string {
 
 // GetRequestID will get reqID from a http request and return it as a string
 func GetRequestID(ctx *fasthttp.RequestCtx) string {
-	reqID := ctx.Value(ContextKeyRequestID)
+	reqID := ctx.Value(helper.ContextKeyRequestID)
 	if ret, ok := reqID.(string); ok {
 		return ret
 	}

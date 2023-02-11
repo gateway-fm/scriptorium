@@ -77,12 +77,12 @@ func LogWithFastContext(ctx *fasthttp.RequestCtx) *Zaplog {
 
 	publicKey := fast_helper.GetPublicKey(ctx)
 	if publicKey == "" {
-		publicKey = fast_helper.PublicKeyNotSet
+		publicKey = helper.PublicKeyNotSet
 	}
 
 	return instance.With(
-		zap.String(string(fast_helper.ContextKeyRequestID), fast_helper.GetRequestID(ctx)),
-		zap.String(string(fast_helper.PublicKey), publicKey),
+		zap.String(string(helper.ContextKeyRequestID), fast_helper.GetRequestID(ctx)),
+		zap.String(string(helper.PublicKey), publicKey),
 	)
 }
 
