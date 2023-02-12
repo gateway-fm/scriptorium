@@ -3,8 +3,6 @@ package logger
 import (
 	"context"
 	"encoding/json"
-	"github.com/gateway-fm/scriptorium/fast_helper"
-	"github.com/valyala/fasthttp"
 	"sync"
 
 	"go.uber.org/zap"
@@ -67,21 +65,6 @@ func LogWithContext(ctx context.Context) *Zaplog {
 
 	return instance.With(
 		zap.String(string(helper.ContextKeyRequestID), helper.GetRequestID(ctx)),
-		zap.String(string(helper.PublicKey), publicKey),
-	)
-}
-
-// LogWithFastContext is invoking Zap Logger function with fasthttp context
-func LogWithFastContext(ctx *fasthttp.RequestCtx) *Zaplog {
-	initLogger()
-
-	publicKey := fast_helper.GetPublicKey(ctx)
-	if publicKey == "" {
-		publicKey = helper.PublicKeyNotSet
-	}
-
-	return instance.With(
-		zap.String(string(helper.ContextKeyRequestID), fast_helper.GetRequestID(ctx)),
 		zap.String(string(helper.PublicKey), publicKey),
 	)
 }
