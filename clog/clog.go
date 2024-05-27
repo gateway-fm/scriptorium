@@ -8,17 +8,14 @@ import (
 	"sync"
 )
 
-func NewCustomLogger(writer io.Writer, level slog.Level, addSource bool) *CustomLogger {
+func NewCustomLogger(dest io.Writer, level slog.Level, addSource bool) *CustomLogger {
 	return &CustomLogger{
-		Logger: slog.New(
-			slog.NewJSONHandler(
-				writer,
-				&slog.HandlerOptions{
-					AddSource: addSource,
-					Level:     level,
-				},
-			),
-		),
+		Logger: slog.New(slog.NewJSONHandler(
+			dest,
+			&slog.HandlerOptions{
+				AddSource: addSource,
+				Level:     level,
+			})),
 		ctxKeys: []fieldKey{},
 	}
 }
@@ -30,24 +27,24 @@ type CustomLogger struct {
 	ctxKeys []fieldKey
 }
 
-// ErrorfCtx logs an error message with fmt.SprintF()
-func (l *CustomLogger) ErrorfCtx(ctx context.Context, err error, msg string, args ...any) {
-	l.With(convertToAttrs(l.fromCtx(ctx))...).With(slog.String("error", err.Error())).ErrorContext(ctx, fmt.Sprintf(msg, args...))
+// ErrorCtx logs an error message with fmt.SprintF()
+func (l *CustomLogger) ErrorCtx(ctx context.Context, err error, msg string, args ...any) {
+	l.With(ConvertToAttrs(l.fromCtx(ctx))...).With(slog.String("error", err.Error())).ErrorContext(ctx, fmt.Sprintf(msg, args...))
 }
 
-// InfofCtx logs an informational message with fmt.SprintF()
-func (l *CustomLogger) InfofCtx(ctx context.Context, msg string, args ...any) {
-	l.With(convertToAttrs(l.fromCtx(ctx))...).InfoContext(ctx, fmt.Sprintf(msg, args...))
+// InfoCtx logs an informational message with fmt.SprintF()
+func (l *CustomLogger) InfoCtx(ctx context.Context, msg string, args ...any) {
+	l.With(ConvertToAttrs(l.fromCtx(ctx))...).InfoContext(ctx, fmt.Sprintf(msg, args...))
 }
 
-// DebugfCtx logs a debug message with fmt.SprintF()
-func (l *CustomLogger) DebugfCtx(ctx context.Context, msg string, args ...any) {
-	l.With(convertToAttrs(l.fromCtx(ctx))...).DebugContext(ctx, fmt.Sprintf(msg, args...))
+// DebugCtx logs a debug message with fmt.SprintF()
+func (l *CustomLogger) DebugCtx(ctx context.Context, msg string, args ...any) {
+	l.With(ConvertToAttrs(l.fromCtx(ctx))...).DebugContext(ctx, fmt.Sprintf(msg, args...))
 }
 
-// WarnfCtx logs a debug message with fmt.SprintF()
-func (l *CustomLogger) WarnfCtx(ctx context.Context, msg string, args ...any) {
-	l.With(convertToAttrs(l.fromCtx(ctx))...).WarnContext(ctx, fmt.Sprintf(msg, args...))
+// WarnCtx logs a debug message with fmt.SprintF()
+func (l *CustomLogger) WarnCtx(ctx context.Context, msg string, args ...any) {
+	l.With(ConvertToAttrs(l.fromCtx(ctx))...).WarnContext(ctx, fmt.Sprintf(msg, args...))
 }
 
 func (l *CustomLogger) AddKeysValuesToCtx(ctx context.Context, kv map[string]interface{}) context.Context {
@@ -62,11 +59,11 @@ func (l *CustomLogger) AddKeysValuesToCtx(ctx context.Context, kv map[string]int
 	return ctx
 }
 
-func (l *CustomLogger) fromCtx(ctx context.Context) fields {
+func (l *CustomLogger) fromCtx(ctx context.Context) Fields {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	f := make(fields)
+	f := make(Fields)
 	for _, ctxKey := range l.ctxKeys {
 		f[ctxKey] = ctx.Value(ctxKey)
 	}

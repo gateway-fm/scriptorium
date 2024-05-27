@@ -1,9 +1,9 @@
 package queue_test
 
 import (
-	"bytes"
 	"context"
 	"log/slog"
+	"os"
 	"testing"
 	"time"
 
@@ -27,11 +27,7 @@ func TestEventBusSuite(t *testing.T) {
 
 func (s *EventBusSuite) SetupTest() {
 	s.ctx = context.Background()
-	s.log = clog.NewCustomLogger(
-		bytes.NewBuffer(nil),
-		slog.LevelDebug,
-		false,
-	)
+	s.log = clog.NewCustomLogger(os.Stdout, slog.LevelDebug, false)
 
 	s.bus = queue.NewEventBus(s.ctx, 100)
 	s.bus.SetLogger(s.log)
@@ -41,9 +37,9 @@ func (s *EventBusSuite) TestRetryLogic() {
 	s.Run("test one topic", func() {
 		retryDelays := []int{1, 1, 1}
 
-		received := make(chan bool, 10)
+		received := make(chan bool, 2)
 
-		s.bus.Subscribe("topic", func(_ context.Context, event queue.Event) queue.AckStatus {
+		s.bus.Subscribe("topic", func(_ context.Context, event *queue.Event) queue.AckStatus {
 			if event.Retry < 3 {
 				return queue.NACK
 			}
@@ -54,7 +50,10 @@ func (s *EventBusSuite) TestRetryLogic() {
 		}, retryDelays, time.Second)
 
 		s.bus.Publish("topic", []byte("Test Event"))
-		go s.bus.StartProcessing(s.ctx)
+		go func() {
+			err := s.bus.StartProcessing(s.ctx)
+			s.Require().NoError(err)
+		}()
 		defer s.bus.Stop()
 
 		select {
@@ -67,9 +66,9 @@ func (s *EventBusSuite) TestRetryLogic() {
 
 	s.Run("test multiple topics", func() {
 		retryDelays := []int{1, 1, 1}
-		received := make(chan bool, 10)
+		received := make(chan bool, 2)
 
-		s.bus.Subscribe("first-topic", func(_ context.Context, event queue.Event) queue.AckStatus {
+		s.bus.Subscribe("first-topic", func(_ context.Context, event *queue.Event) queue.AckStatus {
 			if event.Retry < 3 {
 				return queue.NACK
 			}
@@ -79,7 +78,7 @@ func (s *EventBusSuite) TestRetryLogic() {
 			return queue.ACK
 		}, retryDelays, time.Second)
 
-		s.bus.Subscribe("second-topic", func(_ context.Context, event queue.Event) queue.AckStatus {
+		s.bus.Subscribe("second-topic", func(_ context.Context, event *queue.Event) queue.AckStatus {
 			if event.Retry < 3 {
 				return queue.NACK
 			}
@@ -92,7 +91,11 @@ func (s *EventBusSuite) TestRetryLogic() {
 		s.bus.Publish("first-topic", []byte("Test Event"))
 		s.bus.Publish("second-topic", []byte("Test Event"))
 
-		go s.bus.StartProcessing(s.ctx)
+		go func() {
+			err := s.bus.StartProcessing(s.ctx)
+			s.Require().NoError(err)
+		}()
+
 		defer s.bus.Stop()
 
 		select {

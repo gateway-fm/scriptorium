@@ -29,7 +29,7 @@ jobs:
           version: latest
 
       - name: Test
-        run: go test ./...
+        run: go clean --testcache && go test ./...
 
       - name: Clean workspace
         uses: AutoModality/action-clean@v1.1.0
