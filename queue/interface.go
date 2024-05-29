@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/gateway-fm/scriptorium/transactions"
+
 	"github.com/gateway-fm/scriptorium/clog"
 )
 
@@ -11,8 +13,10 @@ import (
 type EventBus interface {
 	Subscribe(topic string, handler EventHandler, delays []int, durationType time.Duration)
 	Publish(topic string, data []byte)
-	StartProcessing(ctx context.Context)
+	StartProcessing(ctx context.Context) error
 	Stop()
-	ReachedMaxRetries(event Event) bool
+	ExceededMaxRetries(event *Event) bool
 	SetLogger(log *clog.CustomLogger)
+	AddEventToCtx(ctx context.Context, event *Event) context.Context
+	WithOutbox(factory transactions.TransactionFactory)
 }

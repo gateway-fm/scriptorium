@@ -1,14 +1,17 @@
-package clog
+package clog_test
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"log/slog"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/gateway-fm/scriptorium/clog"
 )
 
 const msgKey = "msg"
@@ -16,7 +19,7 @@ const msgKey = "msg"
 func TestCustomLogger(t *testing.T) {
 	var buf bytes.Buffer
 
-	logger := NewCustomLogger(&buf, slog.LevelDebug, true)
+	logger := clog.NewCustomLogger(&buf, slog.LevelDebug, true)
 
 	ctx := context.Background()
 	ctx = logger.AddKeysValuesToCtx(ctx, map[string]interface{}{"user": "testUser"})
@@ -30,7 +33,7 @@ func TestCustomLogger(t *testing.T) {
 		{
 			name: "ErrorfCtx",
 			logFunc: func(ctx context.Context, msg string, args ...any) {
-				logger.ErrorfCtx(ctx, fmt.Errorf("test error"), msg, args...)
+				logger.ErrorCtx(ctx, fmt.Errorf("test error"), msg, args...)
 			},
 			expected:   map[string]interface{}{"level": "ERROR", "user": "testUser", "error": "test error", msgKey: "an error occurred"},
 			errorInput: fmt.Errorf("test error"),
@@ -38,21 +41,21 @@ func TestCustomLogger(t *testing.T) {
 		{
 			name: "InfofCtx",
 			logFunc: func(ctx context.Context, msg string, args ...any) {
-				logger.InfofCtx(ctx, msg, args...)
+				logger.InfoCtx(ctx, msg, args...)
 			},
 			expected: map[string]interface{}{"level": "INFO", "user": "testUser", msgKey: "informational message"},
 		},
 		{
 			name: "DebugfCtx",
 			logFunc: func(ctx context.Context, msg string, args ...any) {
-				logger.DebugfCtx(ctx, msg, args...)
+				logger.DebugCtx(ctx, msg, args...)
 			},
 			expected: map[string]interface{}{"level": "DEBUG", "user": "testUser", msgKey: "debugging message"},
 		},
 		{
 			name: "WarnfCtx",
 			logFunc: func(ctx context.Context, msg string, args ...any) {
-				logger.WarnfCtx(ctx, msg, args...)
+				logger.WarnCtx(ctx, msg, args...)
 			},
 			expected: map[string]interface{}{"level": "WARN", "user": "testUser", msgKey: "warning message"},
 		},
@@ -80,7 +83,7 @@ func TestCustomLogger(t *testing.T) {
 func TestCustomLogger_Level(t *testing.T) {
 	var buf bytes.Buffer
 
-	logger := NewCustomLogger(&buf, slog.LevelInfo, true)
+	logger := clog.NewCustomLogger(&buf, slog.LevelInfo, true)
 
 	ctx := context.Background()
 	ctx = logger.AddKeysValuesToCtx(ctx, map[string]interface{}{"user": "testUser"})
@@ -94,7 +97,7 @@ func TestCustomLogger_Level(t *testing.T) {
 		{
 			name: "DebugfCtx",
 			logFunc: func(ctx context.Context, msg string, args ...any) {
-				logger.DebugfCtx(ctx, msg, args...)
+				logger.DebugCtx(ctx, msg, args...)
 			},
 			expected: map[string]interface{}{"level": "DEBUG", "user": "testUser", msgKey: "debugging message"},
 		},
@@ -112,7 +115,7 @@ func TestCustomLogger_Level(t *testing.T) {
 }
 
 func TestConvertToAttrsConcurrentAccess(t *testing.T) {
-	testFields := fields{
+	testFields := clog.Fields{
 		"user":    "testUser",
 		"session": "xyz123",
 		"role":    "admin",
@@ -126,7 +129,7 @@ func TestConvertToAttrsConcurrentAccess(t *testing.T) {
 	for i := 0; i < repeat; i++ {
 		go func() {
 			defer wg.Done()
-			_ = convertToAttrs(testFields)
+			_ = clog.ConvertToAttrs(testFields)
 		}()
 	}
 

@@ -1,16 +1,25 @@
 package clog
 
-import "log/slog"
+import (
+	"log/slog"
+	"reflect"
+)
 
 type fieldKey string
 
-type fields map[fieldKey]interface{}
+type Fields map[fieldKey]interface{}
 
-// convertToAttrs converts a map of custom fields to a slice of slog.Attr
-func convertToAttrs(fields fields) []any {
+// ConvertToAttrs converts a map of custom fields to a slice of slog.Attr
+func ConvertToAttrs(fields Fields) []any {
 	var attrs []any
 	for k, v := range fields {
-		attrs = append(attrs, slog.Any(string(k), v))
+		if v != nil && !isZeroValue(v) {
+			attrs = append(attrs, slog.Any(string(k), v))
+		}
 	}
 	return attrs
+}
+
+func isZeroValue(v interface{}) bool {
+	return v == reflect.Zero(reflect.TypeOf(v)).Interface()
 }
