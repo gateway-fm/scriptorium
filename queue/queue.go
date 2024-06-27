@@ -94,7 +94,7 @@ func (bus *eventBus) Publish(topic string, data []byte) {
 	if bus.outbox != nil {
 		outboxEvent := convertEventToOutboxEvent(event)
 		if err := bus.outbox.InsertEvent(bus.ctx, outboxEvent); err != nil {
-			bus.log.Error("Failed to save event to outbox: %v", err)
+			bus.log.ErrorCtx(bus.ctx, err, "failed to save event to outbox")
 			return
 		}
 		event.ID = outboxEvent.ID
