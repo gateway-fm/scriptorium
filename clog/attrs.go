@@ -21,5 +21,9 @@ func ConvertToAttrs(fields Fields) []any {
 }
 
 func isZeroValue(v interface{}) bool {
-	return v == reflect.Zero(reflect.TypeOf(v)).Interface()
+	t := reflect.TypeOf(v)
+	if !t.Comparable() {
+		return false
+	}
+	return v == reflect.Zero(t).Interface()
 }
