@@ -13,17 +13,36 @@ type Fields map[fieldKey]interface{}
 func ConvertToAttrs(fields Fields) []any {
 	var attrs []any
 	for k, v := range fields {
-		if v != nil && !isZeroValue(v) {
+		if v != nil && !IsZeroOfUnderlyingType(v) {
 			attrs = append(attrs, slog.Any(string(k), v))
 		}
 	}
 	return attrs
 }
 
-func isZeroValue(v interface{}) bool {
-	t := reflect.TypeOf(v)
-	if !t.Comparable() {
-		return false
+func IsZeroOfUnderlyingType(x interface{}) bool {
+	if x == nil {
+		return true
 	}
-	return v == reflect.Zero(t).Interface()
+
+	rv := reflect.ValueOf(x)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Map, reflect.Array, reflect.Chan:
+		return rv.Len() == 0
+	case reflect.Ptr, reflect.Interface:
+		return rv.IsNil()
+	case reflect.Struct:
+		for i := 0; i < rv.NumField(); i++ {
+			field := rv.Field(i)
+			if !field.CanInterface() {
+				continue // Skip unexported fields
+			}
+			if !IsZeroOfUnderlyingType(field.Interface()) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return reflect.DeepEqual(x, reflect.Zero(rv.Type()).Interface())
 }

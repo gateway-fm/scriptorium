@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -134,4 +136,216 @@ func TestConvertToAttrsConcurrentAccess(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestIsZeroValue(t *testing.T) {
+	tcs := []struct {
+		name     string
+		value    any
+		expected bool
+	}{
+		{
+			"non-empty string",
+			"abc",
+			false,
+		},
+		{
+			"empty string",
+			"",
+			true,
+		},
+		{
+			"empty slice",
+			[]int{},
+			true,
+		},
+		{
+			"non-empty slice",
+			[]int{1, 2, 3},
+			false,
+		},
+		{
+			"nil slice",
+			([]int)(nil),
+			true,
+		},
+		{
+			"empty map",
+			map[string]int{},
+			true,
+		},
+		{
+			"non-empty map",
+			map[string]int{"key": 1},
+			false,
+		},
+		{
+			"nil map",
+			(map[string]int)(nil),
+			true,
+		},
+		{
+			"zero int",
+			0,
+			true,
+		},
+		{
+			"non-zero int",
+			42,
+			false,
+		},
+		{
+			"zero float",
+			0.0,
+			true,
+		},
+		{
+			"non-zero float",
+			3.14,
+			false,
+		},
+		{
+			"empty struct",
+			struct{}{},
+			true,
+		},
+		{
+			"non-zero struct",
+			struct{ A int }{A: 1},
+			false,
+		},
+		{
+			"zero struct with fields",
+			struct{ A int }{A: 0},
+			true,
+		},
+		{
+			"nil pointer",
+			(*int)(nil),
+			true,
+		},
+		{
+			"non-nil pointer",
+			func() *int { v := 42; return &v }(),
+			false,
+		},
+		{
+			"nil interface",
+			(interface{})(nil),
+			true,
+		},
+		{
+			"non-nil interface",
+			interface{}(42),
+			false,
+		},
+		{
+			"nil channel",
+			(chan int)(nil),
+			true,
+		},
+		{
+			"non-nil channel",
+			make(chan int),
+			true,
+		},
+		{
+			"nil function",
+			(func())(nil),
+			true,
+		},
+		{
+			"non-nil function",
+			func() {},
+			false,
+		},
+		{
+			"zero struct with multiple fields",
+			struct {
+				A int
+				B string
+			}{A: 0, B: ""},
+			true,
+		},
+		{
+			"non-zero struct with multiple fields",
+			struct {
+				A int
+				B string
+			}{A: 1, B: "non-zero"},
+			false,
+		},
+		{
+			"nested zero struct",
+			struct {
+				A int
+				B struct{ C int }
+			}{A: 0, B: struct{ C int }{C: 0}},
+			true,
+		},
+		{
+			"nested non-zero struct",
+			struct {
+				A int
+				B struct{ C int }
+			}{A: 0, B: struct{ C int }{C: 1}},
+			false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			out := clog.IsZeroOfUnderlyingType(tc.value)
+			require.Equal(t, tc.expected, out)
+		})
+	}
+}
+
+type testStruct struct {
+	Field1 string
+	Field2 int
+}
+
+func TestCustomLoggerWithContext(t *testing.T) {
+	var buf bytes.Buffer
+	logger := clog.NewCustomLogger(&buf, slog.LevelInfo, true)
+
+	testCh := make(chan int, 1)
+	testCh <- 0
+
+	s := testStruct{
+		Field1: "value1",
+		Field2: 100,
+	}
+
+	ctx := logger.AddKeysValuesToCtx(context.Background(), map[string]interface{}{
+		"userID":     12345,
+		"userName":   "testuser",
+		"time":       time.Now(),
+		"data":       []int{1, 2, 3},
+		"testCh":     testCh,
+		"testStruct": s,
+	})
+
+	logger.InfoCtx(ctx, "User %d logged in", 12345)
+	require.Contains(t, buf.String(), "User 12345 logged in")
+	require.Contains(t, buf.String(), "userID")
+	require.Contains(t, buf.String(), "userName")
+	require.Contains(t, buf.String(), "time")
+	require.Contains(t, buf.String(), "data")
+	require.Contains(t, buf.String(), "testCh")
+	require.Contains(t, buf.String(), "testStruct")
+
+	buf.Reset()
+
+	err := errors.New("something went wrong")
+	logger.ErrorCtx(ctx, err, "Failed to process user %d", 12345)
+	require.Contains(t, buf.String(), "Failed to process user 12345")
+	require.Contains(t, buf.String(), "something went wrong")
+	require.Contains(t, buf.String(), "userID")
+	require.Contains(t, buf.String(), "userName")
+	require.Contains(t, buf.String(), "time")
+	require.Contains(t, buf.String(), "data")
+	require.Contains(t, buf.String(), "testCh")
+	require.Contains(t, buf.String(), "testStruct")
 }
