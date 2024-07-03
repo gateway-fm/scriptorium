@@ -65,7 +65,9 @@ func (l *CustomLogger) fromCtx(ctx context.Context) Fields {
 
 	f := make(Fields)
 	for _, ctxKey := range l.ctxKeys {
-		f[ctxKey] = ctx.Value(ctxKey)
+		if ctx.Value(ctxKey) != nil {
+			f[ctxKey] = ctx.Value(ctxKey)
+		}
 	}
 
 	return f
