@@ -1,8 +1,8 @@
 package clog_test
 
 import (
-	"bytes"
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -10,8 +10,7 @@ import (
 )
 
 func BenchmarkCustomLogger(b *testing.B) {
-	var buf bytes.Buffer
-	logger := clog.NewCustomLogger(&buf, clog.LevelDebug, true)
+	logger := clog.NewCustomLogger(os.Stdout, clog.LevelDebug, true)
 
 	ctx := logger.AddKeysValuesToCtx(context.Background(), map[string]interface{}{
 		"userID":    12345,
@@ -22,8 +21,6 @@ func BenchmarkCustomLogger(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		buf.Reset()
-
 		logger.InfoCtx(ctx, "Some test message")
 	}
 }
