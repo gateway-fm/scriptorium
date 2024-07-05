@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 	"testing"
 	"time"
@@ -21,7 +20,7 @@ const msgKey = "msg"
 func TestCustomLogger(t *testing.T) {
 	var buf bytes.Buffer
 
-	logger := clog.NewCustomLogger(&buf, slog.LevelDebug, true)
+	logger := clog.NewCustomLogger(&buf, clog.LevelDebug, true)
 
 	ctx := context.Background()
 	ctx = logger.AddKeysValuesToCtx(ctx, map[string]interface{}{"user": "testUser"})
@@ -85,7 +84,7 @@ func TestCustomLogger(t *testing.T) {
 func TestCustomLogger_Level(t *testing.T) {
 	var buf bytes.Buffer
 
-	logger := clog.NewCustomLogger(&buf, slog.LevelInfo, true)
+	logger := clog.NewCustomLogger(&buf, clog.LevelInfo, true)
 
 	ctx := context.Background()
 	ctx = logger.AddKeysValuesToCtx(ctx, map[string]interface{}{"user": "testUser"})
@@ -116,12 +115,11 @@ func TestCustomLogger_Level(t *testing.T) {
 	}
 }
 
-func TestConvertToAttrsConcurrentAccess(t *testing.T) {
-	testFields := clog.Fields{
-		"user":    "testUser",
-		"session": "xyz123",
-		"role":    "admin",
-	}
+func TestAddKeysValuesToCtxConcurrentAccess(t *testing.T) {
+	var buffer bytes.Buffer
+	ctx := context.Background()
+
+	logger := clog.NewCustomLogger(&buffer, clog.LevelInfo, true)
 
 	var wg sync.WaitGroup
 
@@ -129,176 +127,19 @@ func TestConvertToAttrsConcurrentAccess(t *testing.T) {
 	wg.Add(repeat)
 
 	for i := 0; i < repeat; i++ {
-		go func() {
+		go func(ctx context.Context) {
 			defer wg.Done()
-			_ = clog.ConvertToAttrs(testFields)
-		}()
+
+			ctx = logger.AddKeysValuesToCtx(ctx, map[string]interface{}{
+				"timestamp": time.Now(),
+			})
+
+			logger.InfoCtx(ctx, "sample log message")
+
+		}(ctx)
 	}
 
 	wg.Wait()
-}
-
-func TestIsZeroValue(t *testing.T) {
-	tcs := []struct {
-		name     string
-		value    any
-		expected bool
-	}{
-		{
-			"non-empty string",
-			"abc",
-			false,
-		},
-		{
-			"empty string",
-			"",
-			true,
-		},
-		{
-			"empty slice",
-			[]int{},
-			true,
-		},
-		{
-			"non-empty slice",
-			[]int{1, 2, 3},
-			false,
-		},
-		{
-			"nil slice",
-			([]int)(nil),
-			true,
-		},
-		{
-			"empty map",
-			map[string]int{},
-			true,
-		},
-		{
-			"non-empty map",
-			map[string]int{"key": 1},
-			false,
-		},
-		{
-			"nil map",
-			(map[string]int)(nil),
-			true,
-		},
-		{
-			"zero int",
-			0,
-			true,
-		},
-		{
-			"non-zero int",
-			42,
-			false,
-		},
-		{
-			"zero float",
-			0.0,
-			true,
-		},
-		{
-			"non-zero float",
-			3.14,
-			false,
-		},
-		{
-			"empty struct",
-			struct{}{},
-			true,
-		},
-		{
-			"non-zero struct",
-			struct{ A int }{A: 1},
-			false,
-		},
-		{
-			"zero struct with fields",
-			struct{ A int }{A: 0},
-			true,
-		},
-		{
-			"nil pointer",
-			(*int)(nil),
-			true,
-		},
-		{
-			"non-nil pointer",
-			func() *int { v := 42; return &v }(),
-			false,
-		},
-		{
-			"nil interface",
-			(interface{})(nil),
-			true,
-		},
-		{
-			"non-nil interface",
-			interface{}(42),
-			false,
-		},
-		{
-			"nil channel",
-			(chan int)(nil),
-			true,
-		},
-		{
-			"non-nil channel",
-			make(chan int),
-			true,
-		},
-		{
-			"nil function",
-			(func())(nil),
-			true,
-		},
-		{
-			"non-nil function",
-			func() {},
-			false,
-		},
-		{
-			"zero struct with multiple fields",
-			struct {
-				A int
-				B string
-			}{A: 0, B: ""},
-			true,
-		},
-		{
-			"non-zero struct with multiple fields",
-			struct {
-				A int
-				B string
-			}{A: 1, B: "non-zero"},
-			false,
-		},
-		{
-			"nested zero struct",
-			struct {
-				A int
-				B struct{ C int }
-			}{A: 0, B: struct{ C int }{C: 0}},
-			true,
-		},
-		{
-			"nested non-zero struct",
-			struct {
-				A int
-				B struct{ C int }
-			}{A: 0, B: struct{ C int }{C: 1}},
-			false,
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			out := clog.IsZeroOfUnderlyingType(tc.value)
-			require.Equal(t, tc.expected, out)
-		})
-	}
 }
 
 type testStruct struct {
@@ -308,7 +149,7 @@ type testStruct struct {
 
 func TestCustomLoggerWithContext(t *testing.T) {
 	var buf bytes.Buffer
-	logger := clog.NewCustomLogger(&buf, slog.LevelInfo, true)
+	logger := clog.NewCustomLogger(&buf, clog.LevelInfo, true)
 
 	testCh := make(chan int, 1)
 	testCh <- 0
