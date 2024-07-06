@@ -1,8 +1,8 @@
 package clog_test
 
 import (
+	"bytes"
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -10,7 +10,9 @@ import (
 )
 
 func BenchmarkCustomLogger(b *testing.B) {
-	logger := clog.NewCustomLogger(os.Stdout, clog.LevelDebug, true)
+	var buf bytes.Buffer
+
+	logger := clog.NewCustomLogger(&buf, clog.LevelDebug, true)
 
 	ctx := logger.AddKeysValuesToCtx(context.Background(), map[string]interface{}{
 		"userID":    12345,
