@@ -13,9 +13,13 @@ func (l *CustomLogger) AddKeysValuesToCtx(ctx context.Context, kv map[string]int
 		return context.WithValue(ctx, fieldMap, kv)
 	}
 
+	l.mu.Lock()
+
 	for k, v := range kv {
 		fields.(map[string]interface{})[k] = v
 	}
+
+	l.mu.Unlock()
 
 	return context.WithValue(ctx, fieldMap, fields)
 }

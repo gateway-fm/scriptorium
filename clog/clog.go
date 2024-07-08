@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"sync"
 )
 
 func NewCustomLogger(dest io.Writer, level Level, addSource bool) *CustomLogger {
@@ -16,11 +17,14 @@ func NewCustomLogger(dest io.Writer, level Level, addSource bool) *CustomLogger 
 					AddSource: addSource,
 					Level:     slog.Level(level),
 				})),
+		mu: &sync.RWMutex{},
 	}
 }
 
 type CustomLogger struct {
 	*slog.Logger
+
+	mu *sync.RWMutex
 }
 
 // ErrorCtx logs an error message with fmt.SprintF()
