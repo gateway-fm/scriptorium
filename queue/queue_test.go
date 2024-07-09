@@ -2,7 +2,6 @@ package queue_test
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"testing"
 	"time"
@@ -27,7 +26,7 @@ func TestEventBusSuite(t *testing.T) {
 
 func (s *EventBusSuite) SetupTest() {
 	s.ctx = context.Background()
-	s.log = clog.NewCustomLogger(os.Stdout, slog.LevelDebug, false)
+	s.log = clog.NewCustomLogger(os.Stdout, clog.LevelDebug, false)
 
 	s.bus = queue.NewEventBus(s.ctx, 100)
 	s.bus.SetLogger(s.log)

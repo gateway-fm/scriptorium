@@ -11,6 +11,7 @@ import (
 
 func BenchmarkCustomLogger(b *testing.B) {
 	var buf bytes.Buffer
+
 	logger := clog.NewCustomLogger(&buf, clog.LevelDebug, true)
 
 	ctx := logger.AddKeysValuesToCtx(context.Background(), map[string]interface{}{
@@ -22,7 +23,6 @@ func BenchmarkCustomLogger(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		buf.Reset()
-		logger.InfoCtx(ctx, "User %d logged in", 12345)
+		logger.InfoCtx(ctx, "Some test message")
 	}
 }
