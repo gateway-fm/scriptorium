@@ -16,6 +16,9 @@ func (l *CustomLogger) AddKeysValuesToCtx(ctx context.Context, kv map[string]int
 	l.mu.Lock()
 
 	for k, v := range kv {
+		if v != nil {
+
+		}
 		fields.(map[string]interface{})[k] = v
 	}
 
@@ -25,5 +28,9 @@ func (l *CustomLogger) AddKeysValuesToCtx(ctx context.Context, kv map[string]int
 }
 
 func (l *CustomLogger) fieldsFromCtx(ctx context.Context) map[string]interface{} {
-	return ctx.Value(fieldMap).(map[string]interface{})
+	if fm := ctx.Value(fieldMap); fm != nil {
+		return fm.(map[string]interface{})
+	}
+
+	return nil
 }
