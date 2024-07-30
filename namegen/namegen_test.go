@@ -17,7 +17,7 @@ func BenchmarkNewName(b *testing.B) {
 
 // TestCollisionRate tests the collision rate of the NewName function.
 func TestCollisionRate(t *testing.T) {
-	const numTries = 1_000_000
+	const numTries = 1000000
 	names := make(map[string]struct{}, numTries)
 	collisions := 0
 

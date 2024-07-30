@@ -13,8 +13,8 @@ func NewName() string {
 	sb := strings.Builder{}
 	sb.Grow(24)
 
-	sb.WriteString(oneOf(Adjectives[:]))
 	sb.WriteString(oneOf(Adverbs[:]))
+	sb.WriteString(oneOf(Adjectives[:]))
 	sb.WriteString(oneOf(Names[:]))
 
 	return sb.String()
