@@ -87,12 +87,13 @@ const (
 )
 
 // Info returns the metric name and labels for an informational event.
-func (s Series) Info() (string, prometheus.Labels) {
+func (s Series) Info(message string) (string, prometheus.Labels) {
 	return "operation_count", prometheus.Labels{
-		"series_type": s.seriesType.String(),
-		"sub_type":    s.subType,
-		"operation":   s.operation,
-		"status":      seriesTypeInfo,
+		"series_type":  s.seriesType.String(),
+		"sub_type":     s.subType,
+		"operation":    s.operation,
+		"status":       seriesTypeInfo,
+		"info_message": message,
 	}
 }
 
