@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,19 +32,24 @@ func NewRegistry(subsystem, namespace string) Registry {
 	return r
 }
 
+func (r *registry) sanitizeMetricName(name string) string {
+	return strings.ReplaceAll(name, "-", "_")
+}
+
 func (r *registry) Inc(name string) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
-	counter, exists := r.counters[name]
+	sanitized := r.sanitizeMetricName(name)
+	counter, exists := r.counters[sanitized]
 	if !exists {
 		counter = prometheus.NewCounter(prometheus.CounterOpts{
 			Subsystem: r.Subsystem,
 			Namespace: r.Namespace,
-			Name:      name,
+			Name:      sanitized,
 		})
 		r.PromRegistry.MustRegister(counter)
-		r.counters[name] = counter
+		r.counters[sanitized] = counter
 	}
 	counter.Inc()
 }
@@ -52,16 +58,17 @@ func (r *registry) RecordDuration(name string, labels []string) *prometheus.Hist
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
-	histogram, exists := r.histograms[name]
+	sanitized := r.sanitizeMetricName(name)
+	histogram, exists := r.histograms[sanitized]
 	if !exists {
 		histogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Subsystem: r.Subsystem,
 			Namespace: r.Namespace,
-			Name:      name,
+			Name:      sanitized,
 			Buckets:   prometheus.DefBuckets,
 		}, labels)
 		r.PromRegistry.MustRegister(histogram)
-		r.histograms[name] = histogram
+		r.histograms[sanitized] = histogram
 	}
 	return histogram
 }
