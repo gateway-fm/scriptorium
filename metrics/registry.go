@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -14,7 +13,7 @@ type registry struct {
 	PromRegistry *prometheus.Registry
 
 	metricsMu  sync.Mutex
-	counters   map[string]*prometheus.CounterVec
+	counters   map[string]prometheus.Counter
 	histograms map[string]*prometheus.HistogramVec
 }
 
@@ -23,7 +22,7 @@ func NewRegistry(subsystem, namespace string) Registry {
 		Subsystem:    subsystem,
 		Namespace:    namespace,
 		PromRegistry: prometheus.NewRegistry(),
-		counters:     make(map[string]*prometheus.CounterVec),
+		counters:     make(map[string]prometheus.Counter),
 		histograms:   make(map[string]*prometheus.HistogramVec),
 	}
 
@@ -32,48 +31,39 @@ func NewRegistry(subsystem, namespace string) Registry {
 	return r
 }
 
-func (r *registry) sanitizeMetricName(name string) string {
-	return strings.ReplaceAll(name, "-", "_")
-}
-
-func (r *registry) Inc(series Series, status string) {
+func (r *registry) Inc(name string) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
-	metricName, labels := series.SuccessLabels()
-	labels["status"] = status
-	sanitized := r.sanitizeMetricName(metricName)
-	counter, exists := r.counters[sanitized]
+	counter, exists := r.counters[name]
 	if !exists {
-		counter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		counter = prometheus.NewCounter(prometheus.CounterOpts{
 			Subsystem: r.Subsystem,
 			Namespace: r.Namespace,
-			Name:      sanitized,
-		}, []string{"series_type", "name", "operation", "status"})
+			Name:      name,
+		})
 		r.PromRegistry.MustRegister(counter)
-		r.counters[sanitized] = counter
+		r.counters[name] = counter
 	}
-	counter.With(labels).Inc()
+	counter.Inc()
 }
 
-func (r *registry) RecordDuration(series Series, duration float64) {
+func (r *registry) RecordDuration(name string, labels []string) *prometheus.HistogramVec {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
-	metricName, labels := series.DurationLabels()
-	sanitized := r.sanitizeMetricName(metricName)
-	histogram, exists := r.histograms[sanitized]
+	histogram, exists := r.histograms[name]
 	if !exists {
 		histogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Subsystem: r.Subsystem,
 			Namespace: r.Namespace,
-			Name:      sanitized,
+			Name:      name,
 			Buckets:   prometheus.DefBuckets,
-		}, []string{"series_type", "name", "operation"})
+		}, labels)
 		r.PromRegistry.MustRegister(histogram)
-		r.histograms[sanitized] = histogram
+		r.histograms[name] = histogram
 	}
-	histogram.With(labels).Observe(duration)
+	return histogram
 }
 
 func (r *registry) PrometheusRegistry() *prometheus.Registry {
