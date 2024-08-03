@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -9,9 +10,10 @@ type (
 	SeriesType string
 
 	Series struct {
-		st        SeriesType
-		name      string
-		operation string
+		seriesType SeriesType
+		subType    string
+		operation  string
+		status     string
 	}
 
 	seriesContextKey struct{}
@@ -30,14 +32,16 @@ const (
 	SeriesTypeDatabusConsumer SeriesType = "databus_consumer"
 )
 
-func NewSeries(st SeriesType, name string) Series {
+// NewSeries creates a new Series instance with the given type and name.
+func NewSeries(st SeriesType, subType string) Series {
 	return Series{
-		st:        st,
-		name:      name,
-		operation: "undefined",
+		seriesType: st,
+		subType:    subType,
+		operation:  "undefined",
 	}
 }
 
+// FromContext retrieves the Series from the context.
 func FromContext(ctx context.Context) Series {
 	series, ok := ctx.Value(seriesContextKey{}).(Series)
 	if !ok {
@@ -47,73 +51,65 @@ func FromContext(ctx context.Context) Series {
 	return series
 }
 
+// WithOperation sets the operation name in the Series and returns an updated context.
 func (s Series) WithOperation(ctx context.Context, operation string) (context.Context, Series) {
 	series := FromContext(ctx)
 
-	if s.st == series.st &&
-		s.name == series.name {
+	if s.seriesType == series.seriesType &&
+		s.subType == series.subType {
 		series = Series{
-			st:        s.st,
-			name:      s.name,
-			operation: series.appendOperation(operation),
+			seriesType: s.seriesType,
+			subType:    s.subType,
+			operation:  series.appendOperation(operation),
 		}
 
 		return series.ToContext(ctx), series
 	}
 
 	series = Series{
-		st:        s.st,
-		name:      s.name,
-		operation: operation,
+		seriesType: s.seriesType,
+		subType:    s.subType,
+		operation:  operation,
 	}
 
 	return series.ToContext(ctx), series
 }
 
+// ToContext adds the Series to the context.
 func (s Series) ToContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, seriesContextKey{}, s)
 }
 
-func (s Series) SuccessLabels() (string, prometheus.Labels) {
-	return "success_count", prometheus.Labels{
-		"series_type": s.st.String(),
-		"name":        s.name,
+// Success returns the metric name and labels for a success event.
+func (s Series) Success() (string, prometheus.Labels) {
+	return "operation_count", prometheus.Labels{
+		"series_type": s.seriesType.String(),
+		"sub_type":    s.subType,
 		"operation":   s.operation,
 		"status":      "success",
 	}
 }
 
-func (s Series) ErrorLabels(errCode string) (string, prometheus.Labels) {
-	return "error_count", prometheus.Labels{
-		"series_type": s.st.String(),
-		"name":        s.name,
+// Error returns the metric name and labels for an error event.
+func (s Series) Error(errCode string) (string, prometheus.Labels) {
+	return "operation_count", prometheus.Labels{
+		"series_type": s.seriesType.String(),
+		"sub_type":    s.subType,
 		"operation":   s.operation,
 		"status":      "error",
 		"error_code":  errCode,
 	}
 }
 
-func (s Series) DurationLabels() (string, prometheus.Labels) {
+// Duration returns the metric name and labels for recording a duration.
+func (s Series) Duration() (string, prometheus.Labels) {
 	return "operation_duration_seconds", prometheus.Labels{
-		"series_type": s.st.String(),
-		"name":        s.name,
+		"series_type": s.seriesType.String(),
+		"sub_type":    s.subType,
 		"operation":   s.operation,
 	}
-}
-
-func (s Series) InfoLabels(code string) (string, prometheus.Labels) {
-	return "info_events", prometheus.Labels{
-		"series_type": s.st.String(),
-		"name":        s.name,
-		"operation":   s.operation,
-		"info_code":   code,
-	}
-}
-
-func (s Series) Operation() string {
-	return s.operation
 }
 
 func (s Series) appendOperation(operation string) string {
-	return s.operation + "." + operation
+	return s.operation + "_" + operation
 }
