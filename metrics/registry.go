@@ -37,8 +37,8 @@ func (r *registry) sanitizeMetricName(name string) string {
 	return strings.ReplaceAll(name, "-", "_")
 }
 
-// Inc increments a counter for the given metric name.
-func (r *registry) Inc(name string) {
+// Inc increments a counter for the given Series.
+func (r *registry) Inc(name string, labels prometheus.Labels) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
@@ -49,15 +49,15 @@ func (r *registry) Inc(name string) {
 			Subsystem: r.Subsystem,
 			Namespace: r.Namespace,
 			Name:      sanitized,
-		}, []string{"series_type", "name", "operation", "status"})
+		}, []string{"series_type", "sub_type", "operation", "status", "error_code"})
 		r.PromRegistry.MustRegister(counter)
 		r.counters[sanitized] = counter
 	}
-	counter.WithLabelValues().Inc()
+	counter.With(labels).Inc()
 }
 
-// RecordDuration records a duration for the given metric name and labels.
-func (r *registry) RecordDuration(name string, labels []string) *prometheus.HistogramVec {
+// RecordDuration records a duration for the given Series.
+func (r *registry) RecordDuration(name string, labels prometheus.Labels, duration float64) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
@@ -69,11 +69,11 @@ func (r *registry) RecordDuration(name string, labels []string) *prometheus.Hist
 			Namespace: r.Namespace,
 			Name:      sanitized,
 			Buckets:   prometheus.DefBuckets,
-		}, labels)
+		}, []string{"series_type", "sub_type", "operation"})
 		r.PromRegistry.MustRegister(histogram)
 		r.histograms[sanitized] = histogram
 	}
-	return histogram
+	histogram.With(labels).Observe(duration)
 }
 
 // PrometheusRegistry returns the underlying Prometheus registry.
