@@ -95,5 +95,5 @@ func (s Series) Operation() string {
 }
 
 func (s Series) appendOperation(operation string) string {
-	return s.operation + "_" + operation
+	return s.operation + "." + operation
 }
