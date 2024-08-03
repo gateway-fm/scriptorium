@@ -80,24 +80,40 @@ func (s Series) ToContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, seriesContextKey{}, s)
 }
 
+const (
+	seriesTypeInfo    = "info"
+	seriesTypeSuccess = "success"
+	seriesTypeError   = "error"
+)
+
+// Info returns the metric name and labels for an informational event.
+func (s Series) Info() (string, prometheus.Labels) {
+	return "operation_count", prometheus.Labels{
+		"series_type": s.seriesType.String(),
+		"sub_type":    s.subType,
+		"operation":   s.operation,
+		"status":      seriesTypeInfo,
+	}
+}
+
 // Success returns the metric name and labels for a success event.
 func (s Series) Success() (string, prometheus.Labels) {
 	return "operation_count", prometheus.Labels{
 		"series_type": s.seriesType.String(),
 		"sub_type":    s.subType,
 		"operation":   s.operation,
-		"status":      "success",
+		"status":      seriesTypeSuccess,
 	}
 }
 
 // Error returns the metric name and labels for an error event.
-func (s Series) Error(errCode string) (string, prometheus.Labels) {
+func (s Series) Error(message string) (string, prometheus.Labels) {
 	return "operation_count", prometheus.Labels{
-		"series_type": s.seriesType.String(),
-		"sub_type":    s.subType,
-		"operation":   s.operation,
-		"status":      "error",
-		"error_code":  errCode,
+		"series_type":   s.seriesType.String(),
+		"sub_type":      s.subType,
+		"operation":     s.operation,
+		"status":        seriesTypeError,
+		"error_message": message,
 	}
 }
 
