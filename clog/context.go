@@ -17,9 +17,8 @@ func (l *CustomLogger) AddKeysValuesToCtx(ctx context.Context, kv map[string]int
 
 	for k, v := range kv {
 		if v != nil {
-
+			fields.(map[string]interface{})[k] = v
 		}
-		fields.(map[string]interface{})[k] = v
 	}
 
 	l.mu.Unlock()
