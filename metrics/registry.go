@@ -33,7 +33,7 @@ func NewRegistry(subsystem, namespace string) Registry {
 }
 
 func (r *registry) sanitizeMetricName(name string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(name, ".", "_"), "-", "_")
+	return strings.ReplaceAll(name, "-", "_")
 }
 
 func (r *registry) Inc(name string) {
