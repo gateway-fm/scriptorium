@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"sort"
 	"strings"
 	"sync"
 
@@ -37,7 +38,7 @@ func (r *registry) sanitizeMetricName(name string) string {
 	return strings.ReplaceAll(name, "-", "_")
 }
 
-// Inc increments a counter for the given Series.
+// Inc increments a counter for the given Series, allowing additional custom labels.
 func (r *registry) Inc(name string, labels prometheus.Labels) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
@@ -49,14 +50,14 @@ func (r *registry) Inc(name string, labels prometheus.Labels) {
 			Subsystem: r.Subsystem,
 			Namespace: r.Namespace,
 			Name:      sanitized,
-		}, []string{"series_type", "sub_type", "operation", "status", "error_code"})
+		}, labelKeys(labels))
 		r.PromRegistry.MustRegister(counter)
 		r.counters[sanitized] = counter
 	}
 	counter.With(labels).Inc()
 }
 
-// RecordDuration records a duration for the given Series.
+// RecordDuration records a duration for the given Series, allowing additional custom labels.
 func (r *registry) RecordDuration(name string, labels prometheus.Labels, duration float64) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
@@ -69,7 +70,7 @@ func (r *registry) RecordDuration(name string, labels prometheus.Labels, duratio
 			Namespace: r.Namespace,
 			Name:      sanitized,
 			Buckets:   prometheus.DefBuckets,
-		}, []string{"series_type", "sub_type", "operation"})
+		}, labelKeys(labels))
 		r.PromRegistry.MustRegister(histogram)
 		r.histograms[sanitized] = histogram
 	}
@@ -87,4 +88,15 @@ func registerMetrics(registry *registry) {
 			collectors.WithGoCollectorMemStatsMetricsDisabled(),
 			collectors.WithGoCollectorRuntimeMetrics(collectors.MetricsScheduler),
 		))
+}
+
+// labelKeys returns the keys of the labels in a deterministic order.
+func labelKeys(labels prometheus.Labels) []string {
+	keys := make([]string, 0, len(labels))
+	for k := range labels {
+		keys = append(keys, k)
+	}
+	// Sort keys to ensure consistent label ordering
+	sort.Strings(keys)
+	return keys
 }

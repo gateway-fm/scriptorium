@@ -14,6 +14,7 @@ type (
 		subType    string
 		operation  string
 		status     string
+		labels     prometheus.Labels
 	}
 
 	seriesContextKey struct{}
@@ -32,13 +33,22 @@ const (
 	SeriesTypeDatabusConsumer SeriesType = "databus_consumer"
 )
 
-// NewSeries creates a new Series instance with the given type and name.
+// NewSeries creates a new Series instance with the given type and subType.
 func NewSeries(st SeriesType, subType string) Series {
 	return Series{
 		seriesType: st,
 		subType:    subType,
 		operation:  "undefined",
+		labels:     make(prometheus.Labels),
 	}
+}
+
+// WithLabels adds custom labels to the Series.
+func (s Series) WithLabels(labels prometheus.Labels) Series {
+	for k, v := range labels {
+		s.labels[k] = v
+	}
+	return s
 }
 
 // FromContext retrieves the Series from the context.
@@ -61,6 +71,7 @@ func (s Series) WithOperation(ctx context.Context, operation string) (context.Co
 			seriesType: s.seriesType,
 			subType:    s.subType,
 			operation:  series.appendOperation(operation),
+			labels:     series.labels,
 		}
 
 		return series.ToContext(ctx), series
@@ -70,6 +81,7 @@ func (s Series) WithOperation(ctx context.Context, operation string) (context.Co
 		seriesType: s.seriesType,
 		subType:    s.subType,
 		operation:  operation,
+		labels:     s.labels,
 	}
 
 	return series.ToContext(ctx), series
@@ -88,45 +100,58 @@ const (
 
 // Info returns the metric name and labels for an informational event.
 func (s Series) Info(message string) (string, prometheus.Labels) {
-	return "operation_count", prometheus.Labels{
+	labels := prometheus.Labels{
 		"series_type":  s.seriesType.String(),
 		"sub_type":     s.subType,
 		"operation":    s.operation,
 		"status":       seriesTypeInfo,
 		"info_message": message,
 	}
+	return "operation_count", mergeLabels(labels, s.labels)
 }
 
 // Success returns the metric name and labels for a success event.
 func (s Series) Success() (string, prometheus.Labels) {
-	return "operation_count", prometheus.Labels{
+	labels := prometheus.Labels{
 		"series_type": s.seriesType.String(),
 		"sub_type":    s.subType,
 		"operation":   s.operation,
 		"status":      seriesTypeSuccess,
 	}
+	return "operation_count", mergeLabels(labels, s.labels)
 }
 
 // Error returns the metric name and labels for an error event.
 func (s Series) Error(message string) (string, prometheus.Labels) {
-	return "operation_count", prometheus.Labels{
+	labels := prometheus.Labels{
 		"series_type":   s.seriesType.String(),
 		"sub_type":      s.subType,
 		"operation":     s.operation,
 		"status":        seriesTypeError,
 		"error_message": message,
 	}
+	return "operation_count", mergeLabels(labels, s.labels)
 }
 
 // Duration returns the metric name and labels for recording a duration.
 func (s Series) Duration() (string, prometheus.Labels) {
-	return "operation_duration_seconds", prometheus.Labels{
+	labels := prometheus.Labels{
 		"series_type": s.seriesType.String(),
 		"sub_type":    s.subType,
 		"operation":   s.operation,
 	}
+	return "operation_duration_seconds", mergeLabels(labels, s.labels)
 }
 
+// appendOperation appends the operation to the Series operation string.
 func (s Series) appendOperation(operation string) string {
 	return s.operation + "_" + operation
+}
+
+// mergeLabels merges a set of additional labels into the base labels.
+func mergeLabels(base prometheus.Labels, additional prometheus.Labels) prometheus.Labels {
+	for k, v := range additional {
+		base[k] = v
+	}
+	return base
 }
