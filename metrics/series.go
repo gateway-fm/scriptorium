@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"context"
-	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type (
@@ -74,20 +74,40 @@ func (s Series) ToContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, seriesContextKey{}, s)
 }
 
-func (s Series) Success() string {
-	return fmt.Sprintf("%s_%s_%s_success", s.st.String(), s.name, s.operation)
+func (s Series) SuccessLabels() (string, prometheus.Labels) {
+	return "success_count", prometheus.Labels{
+		"series_type": s.st.String(),
+		"name":        s.name,
+		"operation":   s.operation,
+		"status":      "success",
+	}
 }
 
-func (s Series) Error(errCode string) string {
-	return fmt.Sprintf("%s.%s.%s.error.%s", s.st.String(), s.name, s.operation, errCode)
+func (s Series) ErrorLabels(errCode string) (string, prometheus.Labels) {
+	return "error_count", prometheus.Labels{
+		"series_type": s.st.String(),
+		"name":        s.name,
+		"operation":   s.operation,
+		"status":      "error",
+		"error_code":  errCode,
+	}
 }
 
-func (s Series) Duration() string {
-	return fmt.Sprintf("%s.%s.%s.duration", s.st.String(), s.name, s.operation)
+func (s Series) DurationLabels() (string, prometheus.Labels) {
+	return "operation_duration_seconds", prometheus.Labels{
+		"series_type": s.st.String(),
+		"name":        s.name,
+		"operation":   s.operation,
+	}
 }
 
-func (s Series) Info(code string) string {
-	return fmt.Sprintf("%s.%s.%s.info.%s", s.st.String(), s.name, s.operation, code)
+func (s Series) InfoLabels(code string) (string, prometheus.Labels) {
+	return "info_events", prometheus.Labels{
+		"series_type": s.st.String(),
+		"name":        s.name,
+		"operation":   s.operation,
+		"info_code":   code,
+	}
 }
 
 func (s Series) Operation() string {
@@ -95,5 +115,5 @@ func (s Series) Operation() string {
 }
 
 func (s Series) appendOperation(operation string) string {
-	return s.operation + "." + operation
+	return s.operation + "_" + operation
 }

@@ -14,7 +14,7 @@ type registry struct {
 	PromRegistry *prometheus.Registry
 
 	metricsMu  sync.Mutex
-	counters   map[string]prometheus.Counter
+	counters   map[string]*prometheus.CounterVec
 	histograms map[string]*prometheus.HistogramVec
 }
 
@@ -23,7 +23,7 @@ func NewRegistry(subsystem, namespace string) Registry {
 		Subsystem:    subsystem,
 		Namespace:    namespace,
 		PromRegistry: prometheus.NewRegistry(),
-		counters:     make(map[string]prometheus.Counter),
+		counters:     make(map[string]*prometheus.CounterVec),
 		histograms:   make(map[string]*prometheus.HistogramVec),
 	}
 
@@ -36,29 +36,32 @@ func (r *registry) sanitizeMetricName(name string) string {
 	return strings.ReplaceAll(name, "-", "_")
 }
 
-func (r *registry) Inc(name string) {
+func (r *registry) Inc(series Series, status string) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
-	sanitized := r.sanitizeMetricName(name)
+	metricName, labels := series.SuccessLabels()
+	labels["status"] = status
+	sanitized := r.sanitizeMetricName(metricName)
 	counter, exists := r.counters[sanitized]
 	if !exists {
-		counter = prometheus.NewCounter(prometheus.CounterOpts{
+		counter = prometheus.NewCounterVec(prometheus.CounterOpts{
 			Subsystem: r.Subsystem,
 			Namespace: r.Namespace,
 			Name:      sanitized,
-		})
+		}, []string{"series_type", "name", "operation", "status"})
 		r.PromRegistry.MustRegister(counter)
 		r.counters[sanitized] = counter
 	}
-	counter.Inc()
+	counter.With(labels).Inc()
 }
 
-func (r *registry) RecordDuration(name string, labels []string) *prometheus.HistogramVec {
+func (r *registry) RecordDuration(series Series, duration float64) {
 	r.metricsMu.Lock()
 	defer r.metricsMu.Unlock()
 
-	sanitized := r.sanitizeMetricName(name)
+	metricName, labels := series.DurationLabels()
+	sanitized := r.sanitizeMetricName(metricName)
 	histogram, exists := r.histograms[sanitized]
 	if !exists {
 		histogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -66,11 +69,11 @@ func (r *registry) RecordDuration(name string, labels []string) *prometheus.Hist
 			Namespace: r.Namespace,
 			Name:      sanitized,
 			Buckets:   prometheus.DefBuckets,
-		}, labels)
+		}, []string{"series_type", "name", "operation"})
 		r.PromRegistry.MustRegister(histogram)
 		r.histograms[sanitized] = histogram
 	}
-	return histogram
+	histogram.With(labels).Observe(duration)
 }
 
 func (r *registry) PrometheusRegistry() *prometheus.Registry {
