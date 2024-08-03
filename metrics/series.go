@@ -93,19 +93,20 @@ func (s Series) ToContext(ctx context.Context) context.Context {
 }
 
 const (
-	seriesTypeInfo    = "info"
-	seriesTypeSuccess = "success"
-	seriesTypeError   = "error"
+	seriesTypeInfo     = "info"
+	seriesTypeSuccess  = "success"
+	seriesTypeError    = "error"
+	seriesTypeDuration = "duration"
 )
 
 // Info returns the metric name and labels for an informational event.
 func (s Series) Info(message string) (string, prometheus.Labels) {
 	labels := prometheus.Labels{
-		"series_type":  s.seriesType.String(),
-		"sub_type":     s.subType,
-		"operation":    s.operation,
-		"status":       seriesTypeInfo,
-		"info_message": message,
+		"series_type": s.seriesType.String(),
+		"sub_type":    s.subType,
+		"operation":   s.operation,
+		"status":      seriesTypeInfo,
+		"message":     message,
 	}
 	return "operation_count", mergeLabels(labels, s.labels)
 }
@@ -117,6 +118,7 @@ func (s Series) Success() (string, prometheus.Labels) {
 		"sub_type":    s.subType,
 		"operation":   s.operation,
 		"status":      seriesTypeSuccess,
+		"message":     "",
 	}
 	return "operation_count", mergeLabels(labels, s.labels)
 }
@@ -124,11 +126,11 @@ func (s Series) Success() (string, prometheus.Labels) {
 // Error returns the metric name and labels for an error event.
 func (s Series) Error(message string) (string, prometheus.Labels) {
 	labels := prometheus.Labels{
-		"series_type":   s.seriesType.String(),
-		"sub_type":      s.subType,
-		"operation":     s.operation,
-		"status":        seriesTypeError,
-		"error_message": message,
+		"series_type": s.seriesType.String(),
+		"sub_type":    s.subType,
+		"operation":   s.operation,
+		"status":      seriesTypeError,
+		"message":     message,
 	}
 	return "operation_count", mergeLabels(labels, s.labels)
 }
@@ -139,6 +141,8 @@ func (s Series) Duration() (string, prometheus.Labels) {
 		"series_type": s.seriesType.String(),
 		"sub_type":    s.subType,
 		"operation":   s.operation,
+		"status":      seriesTypeDuration,
+		"message":     "",
 	}
 	return "operation_duration_seconds", mergeLabels(labels, s.labels)
 }
