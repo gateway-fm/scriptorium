@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -136,7 +137,7 @@ func (s Series) Error(message string) (string, prometheus.Labels) {
 }
 
 // Duration returns the metric name and labels for recording a duration.
-func (s Series) Duration() (string, prometheus.Labels) {
+func (s Series) Duration(d time.Duration) (string, prometheus.Labels, float64) {
 	labels := prometheus.Labels{
 		"series_type": s.seriesType.String(),
 		"sub_type":    s.subType,
@@ -144,7 +145,8 @@ func (s Series) Duration() (string, prometheus.Labels) {
 		"status":      seriesTypeDuration,
 		"message":     "",
 	}
-	return "operation_duration_seconds", mergeLabels(labels, s.labels)
+
+	return "operation_duration_seconds", mergeLabels(labels, s.labels), d.Seconds()
 }
 
 // appendOperation appends the operation to the Series operation string.
