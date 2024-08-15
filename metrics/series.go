@@ -136,14 +136,14 @@ func (s Series) Error(message string) (string, prometheus.Labels) {
 	return "operation_count", mergeLabels(labels, s.labels)
 }
 
-// Duration returns the metric name and labels for recording a duration.
-func (s Series) Duration(d time.Duration) (string, prometheus.Labels, float64) {
+// Duration returns the metric name and labels for recording a duration, where msg carries any additional information
+func (s Series) Duration(d time.Duration, msg string) (string, prometheus.Labels, float64) {
 	labels := prometheus.Labels{
 		"series_type": s.seriesType.String(),
 		"sub_type":    s.subType,
 		"operation":   s.operation,
 		"status":      seriesTypeDuration,
-		"message":     "",
+		"message":     msg,
 	}
 
 	return "operation_duration_seconds", mergeLabels(labels, s.labels), d.Seconds()
