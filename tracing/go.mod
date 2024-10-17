@@ -1,6 +1,6 @@
-module github.com/gateway-fm/tracing
+module github.com/gateway-fm/scriptorium/tracing
 
-go 1.19
+go 1.22
 
 require (
 	github.com/gateway-fm/scriptorium v0.0.14
