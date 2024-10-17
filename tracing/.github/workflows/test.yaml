@@ -1,0 +1,41 @@
+name: Lint and Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint and Test Go Code
+    runs-on:
+      - ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.19.*" # The Go version to download (if necessary) and use.
+      - run: |
+          go version
+          go clean -modcache
+          go mod tidy
+
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          skip-build-cache: true
+          skip-pkg-cache: true
+
+      - name: Test
+        run: go test ./...
+
+      - name: Clean workspace
+        uses: AutoModality/action-clean@v1.1.0
