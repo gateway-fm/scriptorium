@@ -1,6 +1,7 @@
 module github.com/gateway-fm/scriptorium
 
 go 1.22
+toolchain go1.24.1
 
 require (
 	github.com/go-pg/pg/v10 v10.12.0
@@ -11,8 +12,8 @@ require (
 	github.com/stretchr/testify v1.7.1
 	github.com/valyala/fasthttp v1.44.0
 	go.uber.org/zap v1.21.0
-	golang.org/x/crypto v0.31.0
-	golang.org/x/text v0.21.0
+	golang.org/x/crypto v0.35.0
+	golang.org/x/text v0.22.0
 )
 
 require (
@@ -46,7 +47,7 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
